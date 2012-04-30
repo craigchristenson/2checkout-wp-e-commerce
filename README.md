@@ -1,4 +1,4 @@
-### _For a full waiver of 2Checkout's $49 signup fee, enter promo code:  GIT2CO  during signup._
+### _For a discount on 2Checkout’s monthly fees, enter promo code:  GIT2CO  during signup._
 
 Integrate WP e-Commerce with 2Checkout
 ----------------------------------------
