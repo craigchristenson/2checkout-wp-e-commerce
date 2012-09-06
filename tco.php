@@ -29,8 +29,9 @@ function gateway_tco($separator, $sessionid)
 
 	// tco post variables
     $data['sid'] = get_option('tco_seller_id');
+    $data['tco_callback'] = "true";
 	$data['lang'] = get_option('tco_language');
-	$data['x_receipt_link_url'] = get_option('transact_url')."&tco_callback=true";
+	$data['x_receipt_link_url'] = get_option('transact_url');
 	$data['cart_order_id'] = $sessionid;
 	$data['payment_method'] = 'tco';
 
