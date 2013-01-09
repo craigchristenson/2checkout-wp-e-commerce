@@ -28,56 +28,61 @@ function gateway_tco($separator, $sessionid)
 	$cart = $wpdb->get_results($cart_sql,ARRAY_A) ;
 
 	// tco post variables
-    $data['sid'] = get_option('tco_seller_id');
-    $data['tco_callback'] = "true";
+        $data['sid'] = get_option('tco_seller_id');
+        $data['tco_callback'] = "true";
 	$data['lang'] = get_option('tco_language');
 	$data['x_receipt_link_url'] = get_option('transact_url');
 	$data['cart_order_id'] = $sessionid;
 	$data['payment_method'] = 'tco';
+        $data['purchase_step'] = 'payment-method';
 
 	// User details
 	if($_POST['collected_data'][get_option('tco_form_first_name')] != '')
-    {
-    	$data['first_name'] = $_POST['collected_data'][get_option('tco_form_first_name')];
-    }
-	if($_POST['collected_data'][get_option('tco_form_last_name')] != "")
-    {
-    	$data['last_name'] = $_POST['collected_data'][get_option('tco_form_last_name')]; }
-    if($_POST['collected_data'][get_option('tco_form_phone')] != '')
-    {
-    	$data['phone'] = $_POST['collected_data'][get_option('tco_form_phone')];
-    }
-  	if($_POST['collected_data'][get_option('tco_form_address')] != '')
-    {
-    	$data['street_address'] = str_replace("\n",', ', $_POST['collected_data'][get_option('tco_form_address')]);
-    }
-   	if($_POST['collected_data'][get_option('tco_form_city')] != '')
-    {
-    	$data['city'] = $_POST['collected_data'][get_option('tco_form_city')];
-    }
-   	if($_POST['collected_data'][get_option('tco_form_post_code')] != '')
-    {
-    	$data['zip'] = $_POST['collected_data'][get_option('tco_form_post_code')];
-    }
-  	if($_POST['collected_data'][get_option('tco_form_country')] != '')
-    {
-    	$data['country'] =  $_POST['collected_data'][get_option('tco_form_country')][0];
-    }
-    if ($data['country'] == 'US' || $data['country'] == 'CA') {
-    	$data['state'] = get_state($_SESSION['wpsc_selected_region']);
-    } else {
-    	$data['state'] = 'XX';
-    }
+        {
+                $data['first_name'] = $_POST['collected_data'][get_option('tco_form_first_name')];
+        }
+        if($_POST['collected_data'][get_option('tco_form_last_name')] != "")
+        {
+                $data['last_name'] = $_POST['collected_data'][get_option('tco_form_last_name')];
+        }
+        if($_POST['collected_data'][get_option('tco_form_phone')] != '')
+        {
+                $data['phone'] = $_POST['collected_data'][get_option('tco_form_phone')];
+        }
+        if($_POST['collected_data'][get_option('tco_form_address')] != '')
+        {
+                $data['street_address'] = str_replace("\n",', ', $_POST['collected_data'][get_option('tco_form_address')]);
+        }
+        if($_POST['collected_data'][get_option('tco_form_city')] != '')
+        {
+                $data['city'] = $_POST['collected_data'][get_option('tco_form_city')];
+        }
+        if($_POST['collected_data'][get_option('tco_form_post_code')] != '')
+        {
+                $data['zip'] = $_POST['collected_data'][get_option('tco_form_post_code')];
+        }
+        if($_POST['collected_data'][get_option('tco_form_country')] != '')
+        {
+                $data['country'] =  $_POST['collected_data'][get_option('tco_form_country')][0];
+        }
+        if ($data['country'] == 'US' || $data['country'] == 'CA')
+        {
+                $data['state'] = get_state($_SESSION['wpsc_selected_region']);
+        }
+        else
+        {
+                $data['state'] = 'XX';
+        }
 
   	$email_data = $wpdb->get_results("SELECT `id`,`type` FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `type` IN ('email') AND `active` = '1'",ARRAY_A);
   	foreach((array)$email_data as $email)
-    {
-    	$data['email'] = $_POST['collected_data'][$email['id']];
-    }
+        {
+                $data['email'] = $_POST['collected_data'][$email['id']];
+        }
   	if(($_POST['collected_data'][get_option('email_form_field')] != null) && ($data['email'] == null))
-    {
-    	$data['email'] = $_POST['collected_data'][get_option('email_form_field')];
-    }
+        {
+                $data['email'] = $_POST['collected_data'][get_option('email_form_field')];
+        }
 
 	// Get Currency details
 	$currency_code = $wpdb->get_results("SELECT `code` FROM `".WPSC_TABLE_CURRENCY_LIST."` WHERE `id`='".get_option('currency_type')."' LIMIT 1",ARRAY_A);
@@ -103,49 +108,45 @@ function gateway_tco($separator, $sessionid)
 		$variation_count = count($variation_data);
 
 		if($variation_count >= 1)
-      	{
-      		$variation_list = " (";
-      		$j = 0;
-      		foreach($variation_data as $variation)
-        	{
-        		if($j > 0)
-          		{
-          			$variation_list .= ", ";
-          		}
-        		$value_id = $variation['venue_id'];
-        		$value_data = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_VARIATION_VALUES."` WHERE `id`='".$value_id."' LIMIT 1",ARRAY_A);
-        		$variation_list .= $value_data[0]['name'];
-        		$j++;
-        	}
-      		$variation_list .= ")";
-      	}
-      	else
-        {
-        	$variation_list = '';
-        }
+                {
+                        $variation_list = " (";
+                        $j = 0;
+                        foreach($variation_data as $variation)
+                        {
+                                if($j > 0)
+                                {
+                                        $variation_list .= ", ";
+                                }
+                                $value_id = $variation['venue_id'];
+                                $value_data = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_VARIATION_VALUES."` WHERE `id`='".$value_id."' LIMIT 1",ARRAY_A);
+                                $variation_list .= $value_data[0]['name'];
+                                $j++;
+                        }
+                        $variation_list .= ")";
+                }
+                else
+                {
+                        $variation_list = '';
+                }
 
-    	$local_currency_productprice = $item['price'];
-
-			$local_currency_shipping = $item['pnp'];
-
-
-			$tco_currency_productprice = $local_currency_productprice;
-			$tco_currency_shipping = $local_currency_shipping;
-
-                        $data['c_name_'.$i] = $product_data['post_name'].$variation_list;
-                        $data['c_description_'.$i] = $product_data['post_excerpt'].$variation_list;
-                        $data['c_price_'.$i] = number_format(sprintf("%01.2f", $tco_currency_productprice),$decimal_places,'.','');
-                        $data['c_prod_'.$i] = $product_data['post_name'] ."," . $item['quantity'];
-                        $quantity.$i = $item['quantity'];
-
-    	$i++;
+                $local_currency_productprice = $item['price'];
+                $local_currency_shipping = $item['pnp'];
+                $tco_currency_productprice = $local_currency_productprice;
+                $tco_currency_shipping = $local_currency_shipping;
+                $data['c_name_'.$i] = $product_data['post_name'].$variation_list;
+                $data['c_description_'.$i] = $product_data['post_excerpt'].$variation_list;
+                $data['c_price_'.$i] = number_format(sprintf("%01.2f", $tco_currency_productprice),$decimal_places,'.','');
+                $data['c_prod_'.$i] = $product_data['post_name'] ."," . $item['quantity'];
+                $quantity.$i = $item['quantity'];
+                $i++;
 	}
 
 	$data['total'] = $total_price;
 
 
-	if(WPSC_GATEWAY_DEBUG == true ) {
-  	exit("<pre>".print_r($data,true)."</pre>");
+        if(WPSC_GATEWAY_DEBUG == true )
+        {
+  	        exit("<pre>".print_r($data,true)."</pre>");
 	}
 
 
@@ -387,25 +388,25 @@ function nzshpcrt_tco_callback()
 		$seller_id = get_option('tco_seller_id');
 		$secret_word = get_option('tco_secret_word');
 		$sessionid = trim(stripslashes($_REQUEST['cart_order_id']));
-	    $transaction_id = trim(stripslashes($_REQUEST['order_number']));
+                $transaction_id = trim(stripslashes($_REQUEST['order_number']));
 		if ($_REQUEST['demo'] == 'Y') {
-		$transaction_id = 1;
+                        $transaction_id = 1;
 		}
 		$compare_string = $secret_word . $seller_id . $transaction_id . $_REQUEST['total'];
 		$compare_hash1 = strtoupper(md5($compare_string));
 		$compare_hash2 = $_REQUEST['key'];
 		if ($compare_hash1 != $compare_hash2) {
-		$wpdb->update( WPSC_TABLE_PURCHASE_LOGS, array( 'processed' => 2, 'transactid' => $transaction_id, 'date' => time() ), array( 'sessionid' => $sessionid ), array( '%d', '%s' ) );
+                        $wpdb->update( WPSC_TABLE_PURCHASE_LOGS, array( 'processed' => 2, 'transactid' => $transaction_id, 'date' => time() ), array( 'sessionid' => $sessionid ), array( '%d', '%s' ) );
 		} else {
-					$data = array(
-						'processed'  => 3,
-						'transactid' => $transaction_id,
-						'date'       => time(),
-					);
-					$where = array( 'sessionid' => $sessionid );
-					$format = array( '%d', '%s', '%s' );
-					$wpdb->update( WPSC_TABLE_PURCHASE_LOGS, $data, $where, $format );
-					transaction_results($sessionid, false, $transaction_id);
+                        $data = array(
+                                'processed'  => 3,
+                                'transactid' => $transaction_id,
+                                'date'       => time(),
+                        );
+                        $where = array( 'sessionid' => $sessionid );
+                        $format = array( '%d', '%s', '%s' );
+                        $wpdb->update( WPSC_TABLE_PURCHASE_LOGS, $data, $where, $format );
+                        transaction_results($sessionid, false, $transaction_id);
 		}
 
 		// If in debug, email details
@@ -432,30 +433,30 @@ function nzshpcrt_tco_results()
 function submit_tco()
 {
 	if(isset($_POST['tco_seller_id']))
-    {
-    	update_option('tco_seller_id', $_POST['tco_seller_id']);
-    }
+        {
+                update_option('tco_seller_id', $_POST['tco_seller_id']);
+        }
 
-  	if(isset($_POST['tco_secret_word']))
-    {
-    	update_option('tco_secret_word', $_POST['tco_secret_word']);
-    }
+        if(isset($_POST['tco_secret_word']))
+        {
+                update_option('tco_secret_word', $_POST['tco_secret_word']);
+        }
 
-  	if(isset($_POST['tco_language']))
-    {
-    	update_option('tco_language', $_POST['tco_language']);
-    }
+        if(isset($_POST['tco_language']))
+        {
+                update_option('tco_language', $_POST['tco_language']);
+        }
 
-  	if(isset($_POST['tco_debug']))
-    {
-    	update_option('tco_debug', $_POST['tco_debug']);
-    }
+        if(isset($_POST['tco_debug']))
+        {
+                update_option('tco_debug', $_POST['tco_debug']);
+        }
 
-    if (!isset($_POST['tco_form'])) $_POST['tco_form'] = array();
-	foreach((array)$_POST['tco_form'] as $form => $value)
-    {
-    	update_option(('tco_form_'.$form), $value);
-    }
+        if (!isset($_POST['tco_form'])) $_POST['tco_form'] = array();
+            foreach((array)$_POST['tco_form'] as $form => $value)
+        {
+                update_option(('tco_form_'.$form), $value);
+        }
 	return true;
 }
 
@@ -519,17 +520,17 @@ function form_tco()
 					<option ".$select_language['en']." value='en'>Engish</option>
 					<option ".$select_language['es_la']." value='es_la'>Spanish</option>
 					<option ".$select_language['nl']." value='nl'>Dutch</option>
-					<option ".$select_language['zh']." value='zh'>Chinese</option> 
-					<option ".$select_language['da']." value='da'>Danish</option> 
-					<option ".$select_language['fr']." value='fr'>French</option> 
-					<option ".$select_language['gr']." value='gr'>German</option> 
-					<option ".$select_language['el']." value='el'>Greek</option> 
-					<option ".$select_language['it']." value='it'>Italian</option> 
+					<option ".$select_language['zh']." value='zh'>Chinese</option>
+					<option ".$select_language['da']." value='da'>Danish</option>
+					<option ".$select_language['fr']." value='fr'>French</option>
+					<option ".$select_language['gr']." value='gr'>German</option>
+					<option ".$select_language['el']." value='el'>Greek</option>
+					<option ".$select_language['it']." value='it'>Italian</option>
 					<option ".$select_language['jp']." value='jp'>Japanese</option>
 					<option ".$select_language['no']." value='no'>Norwegian</option>
 					<option ".$select_language['pt']." value='pt'>Portuguese</option>
 					<option ".$select_language['es_ib']." value='es_ib'>Spanish(Europe)</option>
-					<option ".$select_language['sv']." value='sv'>Swedish</option>																																																																
+					<option ".$select_language['sv']." value='sv'>Swedish</option>
 				</select>
 			</td>
 		</tr>
