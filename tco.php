@@ -28,51 +28,51 @@ function gateway_tco($separator, $sessionid)
 	$cart = $wpdb->get_results($cart_sql,ARRAY_A) ;
 
 	// tco post variables
-        $data['sid'] = get_option('tco_seller_id');
-        $data['tco_callback'] = "true";
+    $data['sid'] = get_option('tco_seller_id');
+    $data['tco_callback'] = "true";
 	$data['lang'] = get_option('tco_language');
 	$data['x_receipt_link_url'] = get_option('transact_url');
 	$data['cart_order_id'] = $sessionid;
 	$data['payment_method'] = 'tco';
-        $data['purchase_step'] = 'payment-method';
+    $data['purchase_step'] = 'payment-method';
 
 	// User details
 	if($_POST['collected_data'][get_option('tco_form_first_name')] != '')
-        {
-                $data['first_name'] = $_POST['collected_data'][get_option('tco_form_first_name')];
-        }
-        if($_POST['collected_data'][get_option('tco_form_last_name')] != "")
-        {
-                $data['last_name'] = $_POST['collected_data'][get_option('tco_form_last_name')];
-        }
-        if($_POST['collected_data'][get_option('tco_form_phone')] != '')
-        {
-                $data['phone'] = $_POST['collected_data'][get_option('tco_form_phone')];
-        }
-        if($_POST['collected_data'][get_option('tco_form_address')] != '')
-        {
-                $data['street_address'] = str_replace("\n",', ', $_POST['collected_data'][get_option('tco_form_address')]);
-        }
-        if($_POST['collected_data'][get_option('tco_form_city')] != '')
-        {
-                $data['city'] = $_POST['collected_data'][get_option('tco_form_city')];
-        }
-        if($_POST['collected_data'][get_option('tco_form_post_code')] != '')
-        {
-                $data['zip'] = $_POST['collected_data'][get_option('tco_form_post_code')];
-        }
-        if($_POST['collected_data'][get_option('tco_form_country')] != '')
-        {
-                $data['country'] =  $_POST['collected_data'][get_option('tco_form_country')][0];
-        }
-        if ($data['country'] == 'US' || $data['country'] == 'CA')
-        {
-                $data['state'] = get_state($_SESSION['wpsc_selected_region']);
-        }
-        else
-        {
-                $data['state'] = 'XX';
-        }
+    {
+            $data['first_name'] = $_POST['collected_data'][get_option('tco_form_first_name')];
+    }
+    if($_POST['collected_data'][get_option('tco_form_last_name')] != "")
+    {
+            $data['last_name'] = $_POST['collected_data'][get_option('tco_form_last_name')];
+    }
+    if($_POST['collected_data'][get_option('tco_form_phone')] != '')
+    {
+            $data['phone'] = $_POST['collected_data'][get_option('tco_form_phone')];
+    }
+    if($_POST['collected_data'][get_option('tco_form_address')] != '')
+    {
+            $data['street_address'] = str_replace("\n",', ', $_POST['collected_data'][get_option('tco_form_address')]);
+    }
+    if($_POST['collected_data'][get_option('tco_form_city')] != '')
+    {
+            $data['city'] = $_POST['collected_data'][get_option('tco_form_city')];
+    }
+    if($_POST['collected_data'][get_option('tco_form_post_code')] != '')
+    {
+            $data['zip'] = $_POST['collected_data'][get_option('tco_form_post_code')];
+    }
+    if($_POST['collected_data'][get_option('tco_form_country')] != '')
+    {
+            $data['country'] =  $_POST['collected_data'][get_option('tco_form_country')][0];
+    }
+    if ($data['country'] == 'US' || $data['country'] == 'CA')
+    {
+            $data['state'] = get_state($_POST['collected_data'][get_option('tco_form_country')][1]);
+    }
+    else
+    {
+            $data['state'] = 'XX';
+    }
 
   	$email_data = $wpdb->get_results("SELECT `id`,`type` FROM `".WPSC_TABLE_CHECKOUT_FORMS."` WHERE `type` IN ('email') AND `active` = '1'",ARRAY_A);
   	foreach((array)$email_data as $email)
@@ -101,7 +101,6 @@ function gateway_tco($separator, $sessionid)
 	{
 		$product_data = $wpdb->get_results("SELECT * FROM `" . $wpdb->posts . "` WHERE `id`='".$item['prodid']."' LIMIT 1",ARRAY_A);
 		$product_data = $product_data[0];
-		$variation_count = count($product_variations);
 
 		$variation_sql = "SELECT * FROM `".WPSC_TABLE_CART_ITEM_VARIATIONS."` WHERE `cart_id`='".$item['id']."'";
 		$variation_data = $wpdb->get_results($variation_sql,ARRAY_A);
@@ -137,7 +136,6 @@ function gateway_tco($separator, $sessionid)
                 $data['c_description_'.$i] = $product_data['post_excerpt'].$variation_list;
                 $data['c_price_'.$i] = number_format(sprintf("%01.2f", $tco_currency_productprice),$decimal_places,'.','');
                 $data['c_prod_'.$i] = $product_data['post_name'] ."," . $item['quantity'];
-                $quantity.$i = $item['quantity'];
                 $i++;
 	}
 
@@ -152,13 +150,13 @@ function gateway_tco($separator, $sessionid)
 
 	// Create Form to post to 2Checkout
 	$output = "
-		<form id=\"tco_form\" name=\"tco_form\" method=\"post\" action=\"https://www.2checkout.com/checkout/spurchase\">\n";
+		<form id=\"tco_form\" name=\"tco_form\" method=\"post\" action=\"https://www.2checkout.com/checkout/purchase\">\n";
 
 	foreach($data as $n=>$v) {
 			$output .= "			<input type=\"hidden\" name=\"$n\" value=\"$v\" />\n";
 	}
 
-	$output .= "			<input type=\"submit\" value=\"Continue to 2Checkout\" />
+	$output .= "			<input type=\"submit\" value=\"Complete Checkout\" />
 		</form>
 	";
 
@@ -170,11 +168,26 @@ function gateway_tco($separator, $sessionid)
 		echo("<pre>".htmlspecialchars($output)."</pre>");
 	}
 
+    echo("<p><strong>Redirecting to 2Checkout for secure processing. If you are not redirected with in 5 seconds, please click the submit button.</strong></p>");
+
 	echo($output);
+
+    if(get_option('tco_direct') == 1)
+    {
+        echo '<script src="https://www.2checkout.com/static/checkout/javascript/direct.min.js"></script>';
+    }
 
 	if(get_option('tco_debug') == 0)
 	{
-		echo "<script language=\"javascript\" type=\"text/javascript\">document.getElementById('tco_form').submit();</script>";
+        echo '<script type="text/javascript">
+                function submitForm() {
+                    document.getElementById("tco_form").submit();
+                    if(document.getElementById("tco_lightbox")) {
+                        document.getElementById("tco_lightbox").style.display = "block";
+                    }
+                }
+                setTimeout("submitForm()", 2000);
+              </script>';
 	}
 
   	exit();
@@ -452,6 +465,11 @@ function submit_tco()
                 update_option('tco_debug', $_POST['tco_debug']);
         }
 
+        if(isset($_POST['tco_direct']))
+        {
+            update_option('tco_direct', $_POST['tco_direct']);
+        }
+
         if (!isset($_POST['tco_form'])) $_POST['tco_form'] = array();
             foreach((array)$_POST['tco_form'] as $form => $value)
         {
@@ -477,6 +495,19 @@ function form_tco()
 			$tco_debug1 = "checked ='checked'";
 			break;
 	}
+
+    $tco_direct = get_option('tco_direct');
+    $tco_direct1 = "";
+    $tco_direct2 = "";
+    switch($tco_direct)
+    {
+        case 0:
+            $tco_direct2 = "checked ='checked'";
+            break;
+        case 1:
+            $tco_direct1 = "checked ='checked'";
+            break;
+    }
 
 	if (!isset($select_currency['USD'])) $select_currency['USD'] = '';
 	if (!isset($select_currency['EUR'])) $select_currency['EUR'] = '';
@@ -545,6 +576,13 @@ function form_tco()
 		<tr>
 			<td>&nbsp;</td>
 			<td><small>If you are using a demo account, enter this URL in the Approved URL field on your 2Checkout Site Management page and append &tco_callback=true. (Example: http://yoursite.com?page=6&tco_callback=true) This page is the  transaction details page that you have configured in Shop Options.  It can not be edited on this page.</small></td>
+		</tr>
+		<tr>
+			<td>Direct Checkout</td>
+			<td>
+				<input type='radio' value='1' name='tco_direct' id='tco_direct1' ".$tco_direct1." /> <label for='tco_direct1'>".__('Yes', 'wpsc')."</label> &nbsp;
+				<input type='radio' value='0' name='tco_direct' id='tco_direct2' ".$tco_direct2." /> <label for='tco_direct2'>".__('No', 'wpsc')."</label>
+			</td>
 		</tr>
 		<tr>
 			<td>Debug Mode</td>
