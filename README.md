@@ -1,4 +1,4 @@
-### _For a discount on 2Checkout’s monthly fees, enter promo code:  GIT2CO  during signup._
+### _[Signup free with 2Checkout and start selling!](https://www.2checkout.com/referral?r=git2co)_
 
 Integrate WP e-Commerce with 2Checkout
 ----------------------------------------
