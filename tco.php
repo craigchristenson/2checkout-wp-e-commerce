@@ -4,7 +4,7 @@
 	* WP eCommerce 2Checkout Payment Module
 	* This is the file for the 2Checkout purchase routine.
 	* @author Craig Christenson
-	* @version 0.0.1
+	* @version 0.1.0
  	* @package wp-e-commerce
  	* @subpackage wpsc-merchants
 */
@@ -101,52 +101,24 @@ function gateway_tco($separator, $sessionid)
 	{
 		$product_data = $wpdb->get_results("SELECT * FROM `" . $wpdb->posts . "` WHERE `id`='".$item['prodid']."' LIMIT 1",ARRAY_A);
 		$product_data = $product_data[0];
-
-		$variation_sql = "SELECT * FROM `".WPSC_TABLE_CART_ITEM_VARIATIONS."` WHERE `cart_id`='".$item['id']."'";
-		$variation_data = $wpdb->get_results($variation_sql,ARRAY_A);
-		$variation_count = count($variation_data);
-
-		if($variation_count >= 1)
-                {
-                        $variation_list = " (";
-                        $j = 0;
-                        foreach($variation_data as $variation)
-                        {
-                                if($j > 0)
-                                {
-                                        $variation_list .= ", ";
-                                }
-                                $value_id = $variation['venue_id'];
-                                $value_data = $wpdb->get_results("SELECT * FROM `".WPSC_TABLE_VARIATION_VALUES."` WHERE `id`='".$value_id."' LIMIT 1",ARRAY_A);
-                                $variation_list .= $value_data[0]['name'];
-                                $j++;
-                        }
-                        $variation_list .= ")";
-                }
-                else
-                {
-                        $variation_list = '';
-                }
-
-                $local_currency_productprice = $item['price'];
-                $local_currency_shipping = $item['pnp'];
-                $tco_currency_productprice = $local_currency_productprice;
-                $tco_currency_shipping = $local_currency_shipping;
-                $data['c_name_'.$i] = $product_data['post_name'].$variation_list;
-                $data['c_description_'.$i] = $product_data['post_excerpt'].$variation_list;
-                $data['c_price_'.$i] = number_format(sprintf("%01.2f", $tco_currency_productprice),$decimal_places,'.','');
-                $data['c_prod_'.$i] = $product_data['post_name'] ."," . $item['quantity'];
-                $i++;
+        $local_currency_productprice = $item['price'];
+        $local_currency_shipping = $item['pnp'];
+        $tco_currency_productprice = $local_currency_productprice;
+        $tco_currency_shipping = $local_currency_shipping;
+        $data['c_name_'.$i] = $product_data['post_name'];
+        $data['c_description_'.$i] = $product_data['post_excerpt'];
+        $data['c_price_'.$i] = number_format(sprintf("%01.2f", $tco_currency_productprice),$decimal_places,'.','');
+        $data['c_prod_'.$i] = $product_data['post_name'] ."," . $item['quantity'];
+        $i++;
 	}
 
 	$data['total'] = $total_price;
 
 
-        if(WPSC_GATEWAY_DEBUG == true )
-        {
-  	        exit("<pre>".print_r($data,true)."</pre>");
+    if(WPSC_GATEWAY_DEBUG == true )
+    {
+	        exit("<pre>".print_r($data,true)."</pre>");
 	}
-
 
 	// Create Form to post to 2Checkout
 	$output = "
@@ -156,10 +128,6 @@ function gateway_tco($separator, $sessionid)
 			$output .= "			<input type=\"hidden\" name=\"$n\" value=\"$v\" />\n";
 	}
 
-	$output .= "			<input type=\"submit\" value=\"Complete Checkout\" />
-		</form>
-	";
-
 	// echo form..
 	if( get_option('tco_debug') == 1)
 	{
@@ -168,29 +136,41 @@ function gateway_tco($separator, $sessionid)
 		echo("<pre>".htmlspecialchars($output)."</pre>");
 	}
 
-    echo("<p><strong>Redirecting to 2Checkout for secure processing. If you are not redirected with in 5 seconds, please click the submit button.</strong></p>");
-
-	echo($output);
-
     if(get_option('tco_direct') == 1)
     {
-        echo '<script src="https://www.2checkout.com/static/checkout/javascript/direct.min.js"></script>';
-    }
+        $output .= "<script src='https://www.2checkout.com/static/checkout/javascript/direct.min.js'></script>
 
-	if(get_option('tco_debug') == 0)
-	{
-        echo '<script type="text/javascript">
-                function submitForm() {
-                    document.getElementById("tco_form").submit();
-                    if(document.getElementById("tco_lightbox")) {
-                        document.getElementById("tco_lightbox").style.display = "block";
-                    }
+            <script type='text/javascript'>
+
+            var d = document;
+
+            function document_loaded() {
+                if(document.getElementById('tco_lightbox')) {
+                    document.getElementById('tco_lightbox').style.display = 'block';
+                    document.getElementById('tco_form').submit();
                 }
-                setTimeout("submitForm()", 2000);
-              </script>';
-	}
+            }
 
-  	exit();
+            function addEvent(evnt, elem, func) {
+                if (elem.addEventListener)
+                    elem.addEventListener(evnt,func,false);
+                else if (elem.attachEvent) {
+                    elem.attachEvent('on'+evnt, func);
+                }
+                else {
+                    document.getElementById('tco_form').submit();
+                }
+            }
+
+            addEvent('DOMContentLoaded', d, document_loaded);
+
+            </script>
+        ";
+    } else {
+        $output .= '<p><strong>Redirecting to 2Checkout for secure processing.';
+        $output .= '<script>document.getElementById("tco_form").submit();</script>';
+    }
+    echo $output;
 }
 
 function get_state($state_id)
@@ -420,17 +400,6 @@ function nzshpcrt_tco_callback()
                         $format = array( '%d', '%s', '%s' );
                         $wpdb->update( WPSC_TABLE_PURCHASE_LOGS, $data, $where, $format );
                         transaction_results($sessionid, false, $transaction_id);
-		}
-
-		// If in debug, email details
-		if(get_option('tco_debug') == 1)
-		{
-			$message = "This is a debugging message sent because it appears that you are in debug mode.\n\rEnsure 2Checkout debug is turned off once you are happy with the function.\n\r\n\r";
-			$message .= "OUR_POST:\n\r".print_r($header . $req,true)."\n\r\n\r";
-			$message .= "THEIR_POST:\n\r".print_r($_POST,true)."\n\r\n\r";
-			$message .= "GET:\n\r".print_r($_GET,true)."\n\r\n\r";
-			$message .= "SERVER:\n\r".print_r($_SERVER,true)."\n\r\n\r";
-			mail(get_option('purch_log_email'), "2Checkout Data", $message);
 		}
 	}
 }
