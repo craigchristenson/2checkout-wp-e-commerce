@@ -547,7 +547,7 @@ function form_tco()
 			<td><small>If you are using a demo account, enter this URL in the Approved URL field on your 2Checkout Site Management page and append &tco_callback=true. (Example: http://yoursite.com?page=6&tco_callback=true) This page is the  transaction details page that you have configured in Shop Options.  It can not be edited on this page.</small></td>
 		</tr>
 		<tr>
-			<td>Direct Checkout</td>
+			<td>Inline Checkout</td>
 			<td>
 				<input type='radio' value='1' name='tco_direct' id='tco_direct1' ".$tco_direct1." /> <label for='tco_direct1'>".__('Yes', 'wpsc')."</label> &nbsp;
 				<input type='radio' value='0' name='tco_direct' id='tco_direct2' ".$tco_direct2." /> <label for='tco_direct2'>".__('No', 'wpsc')."</label>
