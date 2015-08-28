@@ -5,7 +5,7 @@ Integrate WP e-Commerce with 2Checkout
 
 ### WP e-Commerce Settings
 
-1. Download or clone the 2Checkout payment module at git@github.com:craigchristenson/2checkout-wp-e-commerce.git
+1. Download or clone the 2Checkout payment module at 'https://github.com/craigchristenson/2checkout-wp-e-commerce.git'
 2. Upload the 'wpec-twocheckout-hosted' directory to "/wp-content/plugins/" on your web server and activate the '2Checkout Payment Gateway for WP e-Commerce
 ' plugin.
 3. In your Wordpress admin select **Settings** -> **Store** to open your WP e-Commerce settings.
